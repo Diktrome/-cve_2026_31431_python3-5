@@ -138,8 +138,10 @@ def main(argv: list[str]) -> int:
 ))
 
     if len(uid_str) != 4:
-        print(f"[!] UID '{uid_str}' is {len(uid_str)} chars; this technique "
-              f"needs a 4-digit UID (e.g. 1000-9999).")
+        print("[!] UID '{}' is {} chars; this technique "
+            "needs a 4-digit UID (e.g. 1000-9999).".format(
+                uid_str, len(uid_str)
+            ))
         print(f"[!] Pick a different user or extend with multi-shot writes.")
         return 1
 
