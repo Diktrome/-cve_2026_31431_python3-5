@@ -24,6 +24,7 @@ import pwd
 import socket
 import struct
 import sys
+from typing import Tuple
 
 AF_ALG                    = 38
 SOL_ALG                   = 279
