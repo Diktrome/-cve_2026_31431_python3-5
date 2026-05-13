@@ -131,9 +131,11 @@ def main(argv: list[str]) -> int:
     try:
         uid_off, uid_str = find_uid_field(PASSWD, user)
     except LookupError as e:
-        print(f"[!] {e}")
+        print("[!] {}".format(e))
         return 1
-    print(f"[*] {PASSWD}: {user} UID field at offset {uid_off} = {uid_str!r}")
+    print("[*] {}: {} UID field at offset {} = {!r}".format(
+    PASSWD, user, uid_off, uid_str
+))
 
     if len(uid_str) != 4:
         print(f"[!] UID '{uid_str}' is {len(uid_str)} chars; this technique "
