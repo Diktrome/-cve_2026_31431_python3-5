@@ -119,7 +119,7 @@ def find_uid_field(path: str, username: str) -> tuple[int, str]:
         if nl < 0:
             break
         line_start = nl + 1
-    raise LookupError(f"user {username!r} not found in {path}")
+    raise LookupError("user {!r} not found in {}".format(username, path))
 
 
 def main(argv: list[str]) -> int:
