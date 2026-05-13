@@ -142,7 +142,7 @@ def main(argv: list[str]) -> int:
             "needs a 4-digit UID (e.g. 1000-9999).".format(
                 uid_str, len(uid_str)
             ))
-        print(f"[!] Pick a different user or extend with multi-shot writes.")
+        print("[!] Pick a different user or extend with multi-shot writes.")
         return 1
 
     print(f"[*] Patching {uid_str!r} -> '0000' in page cache...")
