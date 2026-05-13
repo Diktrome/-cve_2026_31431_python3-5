@@ -1,1 +1,1 @@
-# -cve_2026_31431_python3-5
+python3 exploit_cve_2026_31431.py --shell
